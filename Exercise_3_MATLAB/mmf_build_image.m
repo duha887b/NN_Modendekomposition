@@ -1,3 +1,5 @@
+%@Dustin Hanusch 
+
 function [Image_data] = mmf_build_image(number_of_modes,image_size,number_of_data, complex_weights_vector)
 %% load complex mode distribution
 % load the complex distrbutions 

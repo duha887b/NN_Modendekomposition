@@ -1,6 +1,8 @@
+%@Dustin Hanusch 
 %% Generation of dataset.
 % pseudo random mode combination 
-
+clear all
+close all
 %%  set parameters 
 number_of_modes = 3;    %option: 3 or 5
 number_of_data = 10000;
@@ -30,16 +32,25 @@ for n=1 : number_of_data
 
     label = [rho_n phase_scale(:,2:size(phase_scale,2))];
     
-    lebel_vec(:,n) = label; 
+    label_vec(:,n) = label; 
     complexMode_vec(:,n) = k_i; 
+    
 end
+label_vec = label_vec';
+complexMode_vec = complexMode_vec';
 
-
-
-
-%dividerand
 % 6. split complex mode weights vector and label vector into Training,
+%dividerand
 % validation and test set. 
+
+[trainInd,testInd,validInd] = dividerand(number_of_data,0.7,0.1,0.2);
+Label_Test = label_vec(testInd,:);
+cplM_Test = complexMode_vec(testInd,:);
+Label_Valid = label_vec(validInd,:);
+cplM_Valid = complexMode_vec(validInd,:);
+Label_Train = label_vec(trainInd,:);
+cplM_Train = complexMode_vec(trainInd,:);
+
 
 %% create image data - step 2
 % use function mmf_build_image()
