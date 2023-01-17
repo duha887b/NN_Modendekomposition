@@ -16,8 +16,12 @@ end
 % define a variable for Image data with dimension (image size, image size, 1, n)
 fprintf("Start to generate the mode distribution......\n");
 
+imageVec_tmp = zeros(image_size,image_size,1,number_of_data);
+
 for index_number=1:number_of_data
     % 1. define a variable for single image with resolution (image size,image size)
+    image_tmp = zeros(image_size,image_size);
+
     
     % 2. generation of complex field distribution 
 
