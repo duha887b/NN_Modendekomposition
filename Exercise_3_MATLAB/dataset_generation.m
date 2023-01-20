@@ -44,28 +44,30 @@ complexMode_vec = complexMode_vec';
 % validation and test set. 
 
 [trainInd,testInd,validInd] = dividerand(number_of_data,0.7,0.1,0.2);
-Label_Test = label_vec(testInd,:);
+YTest = label_vec(testInd,:);
 cplM_Test = complexMode_vec(testInd,:);
-Label_Valid = label_vec(validInd,:);
+YValid = label_vec(validInd,:);
 cplM_Valid = complexMode_vec(validInd,:);
-Label_Train = label_vec(trainInd,:);
+YTrain = label_vec(trainInd,:);
 cplM_Train = complexMode_vec(trainInd,:);
 
 
 %% create image data - step 2
 % use function mmf_build_image()
-pic = mmf_build_image(number_of_modes,image_size,number_of_data,complexMode_vec);
 
 
+XTest = mmf_build_image(number_of_modes,image_size,size(cplM_Test,1),cplM_Test);
+XValid = mmf_build_image(number_of_modes,image_size,size(cplM_Valid,1),cplM_Valid);
+XTrain = mmf_build_image(number_of_modes,image_size,size(cplM_Train,1),cplM_Train);
 
 figure
 k=0;
 for i=1:30
     k = k+1;
-    subplot(10,3,k), imshow(pic(:,:,1,i),[0 1])
+    subplot(10,3,k), imshow(XTest(:,:,1,i),[0 1])
     
 
 end
 %% save dataset
 
-
+save('mmf_Traingsdata.mat',"XTrain","YTrain","XValid","YValid",'XTest','YTest');
