@@ -30,14 +30,14 @@ for index_number=1:number_of_data
     end
     
     % 3. abstract Amplitude distribution 
-    image = abs(image_tmp(:,:,1));
+    image_tmp = abs(image_tmp(:,:,1));
     
     % 4. normalization the amplitude distribution to (0,1)
-    image = normalization(image,0,1);
+    image_tmp = normalization(image_tmp,0,1);
     %    using normalization(image, minValue, maxValue)
     
     
-    Image_data(:,:,1,index_number) = image;
+    Image_data(:,:,1,index_number) = image_tmp;
 end
 
 fprintf("The image data has been generated.\n");
