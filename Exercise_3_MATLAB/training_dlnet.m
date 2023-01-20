@@ -4,13 +4,31 @@ clear all
 close all
 %% load dataset
 %  1. load the dataset
-
+load("mmf_Traingsdata.mat");
 %  2. define the input and output size for neural network
-
+Nmodes = 3;
+ImageSize = 32;
+outputsize = Nmodes*2-1;
+inputsize = ImageSize^2;
 
 %% create MLP neural network - step 3 
-% Layers_MLP = [];
+inputSize = [32 32 1];
+Layers_MLP = [
+    imageInputLayer(inputSize,Normalization="none" )
+    fullyConnectedLayer(inputsize,'Name','fc1')
+    leakyReluLayer('Name', 'relu1')
+    fullyConnectedLayer(inputsize,'Name','fc2')
+    leakyReluLayer('Name','relu2')
+    fullyConnectedLayer(outputsize,"Name","fc_output")
+    %sigmoidLayer("Name",'out')
+    %softmaxLayer
 
+];
+% convert to a layer graph
+lgraph = layerGraph(Layers_MLP);
+% Create a dlnetwork object from the layer graph.
+dlnet = dlnetwork(lgraph);
+%analyzeNetwork(Layers_MLP);
 %% create VGG neural network - step 7
 % Layers_VGG= [];
 % use command dlnetwork()
@@ -23,12 +41,20 @@ close all
 
 %% Training network  - step 3
 % define hyperparameters
-% miniBatchSize = 128;
-% numEpochs = 10;
-% learnRate = 0.001;
-numObservations = size(XTrain,4);   
+
+miniBatchSize = 128;
+
+numEpochs = 10;
+
+learnRate = 0.001;
+
+numObservations = size(XTrain,4);
+
 numIterationsPerEpoch = floor(numObservations./miniBatchSize);
-% executionEnvironment = "parallel";    
+
+executionEnvironment = "parallel";
+
+
 
 %Visualize the training progress in a plot.
 plots = "training-progress";
@@ -47,23 +73,29 @@ iteration = 0;
 averageGrad = [];
 averageSqGrad = [];
 for epoch = 1:numEpochs
-    
+    disp(epoch);
     for i = 1:numIterationsPerEpoch
         iteration = iteration + 1;
         
         % 1. Read mini-batch of data and convert the labels to dummy
         % variables.
+        
+        idx = (i-1)*miniBatchSize+1:i*miniBatchSize;
+        XTmp = XTrain(:,:,:,idx);
+        
+        
+        Y = zeros(5, miniBatchSize,"double");
+        Y = YTrain(idx,:);
 
-        
         % 2. Convert mini-batch of data to a dlarray.
-        
+        dlX = dlarray(XTmp,'SSCB');
         % If training on a GPU, then convert data to a gpuArray.
 
         % 3. Evaluate the model gradients and loss using the
         % modelGradients() and dlfeval()
-
+        [gradients,loss,dlYPred] = dlfeval(@modelGradients,dlnet,dlX,Y);
         % 4. Update the network parameters using the Adam optimizer.
-
+        [dlnet,averageGrad,averageSqGrad ] = adamupdate(dlnet,gradients,averageGrad,averageSqGrad,iterations,learnRate);
         % Display the training progress.
         if plots == "training-progress"
             D = duration(0,0,toc(start),'Format','hh:mm:ss');
@@ -89,3 +121,16 @@ end
 
 
 %% save model
+
+%% Define Model Gradients Function
+% 
+function [gradients,loss,dlYPred] = modelGradients(dlnet,dlX,Y)
+
+    % forward propagation 
+    dlYPred = forward(dlnet,dlX);
+    % calculate loss -- varies based on different requirement
+    loss = crossentropy(dlYPred,Y);
+    % calculate gradients 
+    gradients = dlgradient(loss,dlnet.Learnables);
+    
+end
