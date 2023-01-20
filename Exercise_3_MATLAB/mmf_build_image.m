@@ -24,14 +24,19 @@ for index_number=1:number_of_data
 
     
     % 2. generation of complex field distribution 
-
+    for i=1:number_of_modes
+        image_tmp = image_tmp + (mmf_modes(:,:,i)*complex_weights_vector(index_number,i));
+        
+    end
+    
     % 3. abstract Amplitude distribution 
     
     % 4. normalization the amplitude distribution to (0,1)
     %    using normalization(image, minValue, maxValue)
-    
+    disp(index_number);
     
 end
+
 fprintf("The image data has been generated.\n");
 
 end

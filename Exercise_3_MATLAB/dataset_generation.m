@@ -54,7 +54,7 @@ cplM_Train = complexMode_vec(trainInd,:);
 
 %% create image data - step 2
 % use function mmf_build_image()
-
+mmf_build_image(3,image_size,1,complexMode_vec);
 
 %% save dataset
 
