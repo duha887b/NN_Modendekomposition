@@ -24,14 +24,14 @@ for n=1 : number_of_data
 
     phase = rand(1,number_of_modes-1)*2*pi;                      % 2. create random phase amplitude. (Using realtive phase difference)
     phase = phase-pi;
-    phaes_rel = [0 phase];
+    phaes_rel = [0 
     phase_norm = cos(phaes_rel);    
     phase_scale = rescale(phase_norm,InputMin=-1,InputMax=1);   % 4. normalize cos(phase) to (0,1)
     k_i = rho_n.*exp(1i*phaes_rel);                             % 3. complex mode weights vector
                                                             
                                                             
 
-    label = [rho_n phase_scale(:,2:size(phase_scale,2))];
+    label = [rho_n phase_scale(:,1:size(phase_scale,2))];
     
     label_vec(:,n) = label; 
     complexMode_vec(:,n) = k_i; 
