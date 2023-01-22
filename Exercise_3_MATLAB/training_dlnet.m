@@ -21,7 +21,7 @@ Layers_MLP = [
     leakyReluLayer('Name','relu2')
     fullyConnectedLayer(outputsize,"Name","fc_output")
     sigmoidLayer("Name",'out')
-    %softmaxLayer
+   
 
 ];
 % convert to a layer graph
@@ -50,7 +50,7 @@ miniBatchSize = 128;
 
 numEpochs = 10;
 
-learnRate = 0.001;
+learnRate = 0.00001;
 
 numObservations = size(XTrain,4);
 
@@ -113,14 +113,27 @@ for epoch = 1:numEpochs
 end
 %% Test Network  - step 4
 % transfer data to dlarray
+dlTest = dlarray(XTest,'SSCB');
 % use command "predict"
+dlYPred = predict(dlnet,dlTest);
 % use command "extractdata" to extract data from dlarray
-
+YPred = zeros(2*Nmodes-1,size(YTest,1),"double");
+YPred = double(extractdata(dlYPred))';
 % reconstruct field distribution
-% [] = mmf_rebuilt_image();
 
+[Image_data_complex,complex_vector_N] = mmf_rebuilt_image(YPred,XTest,Nmodes);
+
+figure
+k=0;
+for imt=1:5
+    k=k+1;
+    subplot(5,2,k), imshow(Image_data_complex(:,:,1,imt),[0 1]),title('Pred')
+    k=k+1;
+    subplot(5,2,k), imshow(XTest(:,:,1,imt),[0 1]),title('Org')
+end
 %%  Visualization results - step 5
 % calculate Correlation between the ground truth and reconstruction
+corr_gt_rc = corr2(Image_data_complex,XTest);
 % calculate std
 % plot()
 % calulate relative error of ampplitude and phase 

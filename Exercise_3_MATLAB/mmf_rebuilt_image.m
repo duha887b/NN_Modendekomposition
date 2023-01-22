@@ -19,22 +19,22 @@ number_of_test_images=size(pred_vectors,1);
 ground_truth = squeeze(ground_truth);
 %% read mode weights from predicted vectors
 % read amplitude weigths
-
+amplitude_vector = pred_vectors(:,1:number_of_modes);
 % read cos(phase) 
-
+phase_cos = pred_vectors(:,number_of_modes+1:end);
 % normalization cos(phase) to (-1,1)
-
+phase_cos = normalization(phase_cos,-1,1);
 % calculate phase through arccos()
-
+phase = acos(phase_cos);
 % add phase weight of the first mode(phase value = 0) 
-
+phase = [zeros(number_of_test_images,1) phase];
 %% rebuilt phase vector
 % define a varibale for complex vectors
 complex_vector_N  = zeros(number_of_test_images,number_of_modes);
 
 for i1=1:number_of_test_images
     % read phase weights and generate all possible combinations 
-    phi_vectors = phi(i1,:).* phase_weight;
+    phi_vectors = phase(i1,:).* phase_weight;
     complex_vector_n = zeros(size(phi_vectors,1),number_of_modes);
     % read the ground truth
     ground_truth_i = ground_truth(:,:,i1); 
@@ -45,11 +45,15 @@ for i1=1:number_of_test_images
         complex_vector = amplitude_vector(i1,:) .*exp(1i* phi_vectors(i2,:)); %                
         
         % 1. define a variable for single image with resolution (image size,image size)
-        % 
+        single_image = zeros(image_size,image_size,'double');
         % 2. generation of complex field distribution
+        for i4=1:number_of_modes
+        single_image = single_image + (mmf_modes(:,:,i4)*complex_vector(1,i4));
         
+        end
         % 3. abstract Amplitude distribution
         %    abs(template)
+        template = abs(single_image);
     
         
         % calculate the correlation coefficient between reconstrion and ground
@@ -67,5 +71,5 @@ for i1=1:number_of_test_images
 end
 %% rebuilt the distribution(complex) 
 % using function: mmf_build_image()
-
+Image_data_complex = mmf_build_image(number_of_modes,image_size,number_of_test_images,complex_vector_N);
 end
