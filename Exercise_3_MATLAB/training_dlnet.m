@@ -111,6 +111,7 @@ for epoch = 1:numEpochs
         end
     end
 end
+%% restore network for save
 %% Test Network  - step 4
 % transfer data to dlarray
 dlTest = dlarray(XTest,'SSCB');
@@ -132,15 +133,23 @@ for imt=1:5
     subplot(5,2,k), imshow(XTest(:,:,1,imt),[0 1]),title('Org')
 end
 %%  Visualization results - step 5
-% calculate Correlation between the ground truth and reconstruction
-corr_gt_rc = corr2(Image_data_complex,XTest);
-% calculate std
+
+
+for itc=1:size(XTest,4)
+    corr_gt_rc(itc) = corr2(Image_data_complex(:,:,1,itc),XTest(:,:,1,itc));    % calculate Correlation between the ground truth and reconstruction
+    std_t_t(itc) = std2(Image_data_complex(:,:,1,itc));                         % calculate std
+end
+
+
 % plot()
+figure
+subplot(1,2,1), boxchart(corr_gt_rc),title('Correlation') ;
+subplot(1,2,2), boxchart(std_t_t),title('Standartabweichung');
 % calulate relative error of ampplitude and phase 
 
 
 %% save model
-
+save("networks.mat",'dlnet');
 %% Define Model Gradients Function
 % 
 function [gradients,loss,dlYPred] = modelGradients(dlnet,dlX,Y)
