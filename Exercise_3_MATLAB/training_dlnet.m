@@ -9,7 +9,7 @@ load("mmf_Traingsdata.mat");
 Nmodes = 3;
 ImageSize = 32;
 outputsize = Nmodes*2-1;
-inputsize = ImageSize^2;
+inputsize = ImageSize.^2;
 
 %% create MLP neural network - step 3 
 inputSize = [32 32 1];
@@ -20,15 +20,19 @@ Layers_MLP = [
     fullyConnectedLayer(inputsize,'Name','fc2')
     leakyReluLayer('Name','relu2')
     fullyConnectedLayer(outputsize,"Name","fc_output")
-    %sigmoidLayer("Name",'out')
+    sigmoidLayer("Name",'out')
     %softmaxLayer
 
 ];
 % convert to a layer graph
 lgraph = layerGraph(Layers_MLP);
+%add output
+% sig = sigmoidLayer("Name",'out_1');
+% lgraph = addLayers(lgraph,sig);
+% lgraph = connectLayers(lgraph,"fc_output",'out_1');
 % Create a dlnetwork object from the layer graph.
 dlnet = dlnetwork(lgraph);
-%analyzeNetwork(Layers_MLP);
+%analyzeNetwork(dlnet);
 %% create VGG neural network - step 7
 % Layers_VGG= [];
 % use command dlnetwork()
@@ -68,6 +72,7 @@ if plots == "training-progress"
     grid on
 end
 iteration = 0;
+start = tic;
 % Train Network
 % Initialize the average gradients and squared average gradients.
 averageGrad = [];
@@ -84,8 +89,9 @@ for epoch = 1:numEpochs
         XTmp = XTrain(:,:,:,idx);
         
         
-        Y = zeros(5, miniBatchSize,"double");
+        Y = zeros(miniBatchSize,5,"double");
         Y = YTrain(idx,:);
+        Y = Y';
 
         % 2. Convert mini-batch of data to a dlarray.
         dlX = dlarray(XTmp,'SSCB');
@@ -95,7 +101,7 @@ for epoch = 1:numEpochs
         % modelGradients() and dlfeval()
         [gradients,loss,dlYPred] = dlfeval(@modelGradients,dlnet,dlX,Y);
         % 4. Update the network parameters using the Adam optimizer.
-        [dlnet,averageGrad,averageSqGrad ] = adamupdate(dlnet,gradients,averageGrad,averageSqGrad,iterations,learnRate);
+        [dlnet,averageGrad,averageSqGrad ] = adamupdate(dlnet,gradients,averageGrad,averageSqGrad,iteration,learnRate);
         % Display the training progress.
         if plots == "training-progress"
             D = duration(0,0,toc(start),'Format','hh:mm:ss');
