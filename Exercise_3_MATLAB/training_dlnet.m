@@ -3,10 +3,19 @@
 clear all
 close all
 %% load dataset
-%  1. load the dataset
-load("mmf_Traingsdata_3modes.mat");
+
+load("networks.mat");
 %  2. define the input and output size for neural network
-Nmodes = 3;
+Nmodes = 5;
+
+if Nmodes == 3 
+    load("mmf_Traingsdata_3modes.mat");     %  1. load the dataset
+end
+if Nmodes == 5
+    load("mmf_Traingsdata_5modes.mat");
+end
+
+
 ImageSize = 32;
 outputsize = Nmodes*2-1;
 inputsize = ImageSize.^2;
@@ -48,9 +57,9 @@ dlnet = dlnetwork(lgraph);
 
 miniBatchSize = 128;
 
-numEpochs = 10;
+numEpochs = 5;
 
-learnRate = 0.00001;
+learnRate = 0.001;
 
 numObservations = size(XTrain,4);
 
@@ -58,6 +67,9 @@ numIterationsPerEpoch = floor(numObservations./miniBatchSize);
 
 executionEnvironment = "parallel";
 
+ValidationFrequenz = 2;
+ValCount = 0;
+dlValid = dlarray(XValid,'SSCB');
 
 
 %Visualize the training progress in a plot.
@@ -65,10 +77,12 @@ plots = "training-progress";
 % Train Network
 if plots == "training-progress"
     figure
-    lineLossTrain = animatedline('Color',[0.85 0.325 0.098]);
+    lineLossTrain = animatedline('Color',[0.85 0.325 0.098],'LineWidth',1.5);
+    lineLossValid = animatedline('Color',[0 0 0],'LineWidth',1.5,'LineStyle','-.');
     ylim([0 inf])
     xlabel("Iteration")
     ylabel("Loss")
+    legend('TrainingLoss','ValidationLoss')
     grid on
 end
 iteration = 0;
@@ -99,19 +113,29 @@ for epoch = 1:numEpochs
 
         % 3. Evaluate the model gradients and loss using the
         % modelGradients() and dlfeval()
-        [gradients,loss,dlYPred] = dlfeval(@modelGradients,dlnet,dlX,Y);
+        [gradients,loss] = dlfeval(@modelGradients,dlnet,dlX,Y);
         % 4. Update the network parameters using the Adam optimizer.
         [dlnet,averageGrad,averageSqGrad ] = adamupdate(dlnet,gradients,averageGrad,averageSqGrad,iteration,learnRate);
+        
+        %Validation
+        if iteration >= ValCount
+            dlYValid = predict(dlnet,dlValid);
+            ValLoss = mse(dlYValid,YValid');
+            ValCount = ValCount + ValidationFrequenz;
+        end
+        
         % Display the training progress.
         if plots == "training-progress"
             D = duration(0,0,toc(start),'Format','hh:mm:ss');
             addpoints(lineLossTrain,iteration,double(gather(extractdata(loss))))
+            addpoints(lineLossValid,iteration,double(gather(extractdata(ValLoss))))
             title("Epoch: " + epoch + ", Elapsed: " + string(D) + ", Loss: " + num2str(double(gather(extractdata(loss)))));
             drawnow
         end
     end
 end
-%% restore network for save
+
+
 %% Test Network  - step 4
 % transfer data to dlarray
 dlTest = dlarray(XTest,'SSCB');
@@ -137,28 +161,36 @@ end
 
 for itc=1:size(XTest,4)
     corr_gt_rc(itc) = corr2(Image_data_complex(:,:,1,itc),XTest(:,:,1,itc));    % calculate Correlation between the ground truth and reconstruction
-    std_t_t(itc) = std2(Image_data_complex(:,:,1,itc));                         % calculate std
+    %std_t_t(itc) = std2(Image_data_complex(:,:,1,itc));                         
 end
 
+%std der ergebnisse
+std_corr = std(corr_gt_rc);
+mean_corr = mean(corr_gt_rc);
+
+% calulate relative error of ampplitude and phase
+phase_rel = YTest(:,Nmodes+1:end) - YPred(:,Nmodes+1:end);
+ampli_rel = YTest(:,1:Nmodes) - YPred(:,1:Nmodes);
+mean_phase = mean(mean(phase_rel));
+mean_ampli = mean(mean(ampli_rel));
+
+%display values
+disp("Mean_corr: " + num2str(mean_corr) + "  Std: " + num2str(std_corr) + ...
+    "  Mean_amp: " + num2str(mean_ampli) + "  Mean_phase: " + num2str(mean_phase))
+ 
 
 % plot()
 figure
-subplot(1,2,1), boxchart(corr_gt_rc),title('Correlation') ;
-subplot(1,2,2), boxchart(std_t_t),title('Standartabweichung');
-% calulate relative error of ampplitude and phase 
+subplot(1,1,1), boxchart(corr_gt_rc),title('Correlation') ;
+%subplot(1,2,2), boxchart(std_t_t),title('Standartabweichung');
+
 
 
 %% save model
-save("networks.mat",'dlnet');
-%% Define Model Gradients Function
-% 
-function [gradients,loss,dlYPred] = modelGradients(dlnet,dlX,Y)
 
-    % forward propagation 
-    dlYPred = forward(dlnet,dlX);
-    % calculate loss -- varies based on different requirement
-    loss = crossentropy(dlYPred,Y);
-    % calculate gradients 
-    gradients = dlgradient(loss,dlnet.Learnables);
-    
-end
+
+%mlp_3modes = dlnet;
+%mlp_5modes = dlnet;
+
+save("networks.mat",'mlp_3modes','mlp_5modes');
+
