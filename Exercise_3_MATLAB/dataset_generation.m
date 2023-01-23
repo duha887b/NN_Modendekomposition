@@ -4,7 +4,7 @@
 clear all
 close all
 %%  set parameters 
-number_of_modes = 3;    %option: 3 or 5
+number_of_modes = 5;    %option: 3 or 5
 number_of_data = 10000;
 image_size = 32;    % resolution 32x32
  
@@ -71,4 +71,4 @@ for i=1:30
 end
 %% save dataset
 
-save('mmf_Traingsdata.mat',"XTrain","YTrain","XValid","YValid",'XTest','YTest');
+save('mmf_Traingsdata_5modes.mat',"XTrain","YTrain","XValid","YValid",'XTest','YTest');

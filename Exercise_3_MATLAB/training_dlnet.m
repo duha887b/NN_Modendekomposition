@@ -1,10 +1,10 @@
 % Training of dlnet-type neural network for mode decomposition
-
+%@Dustin Hanusch
 clear all
 close all
 %% load dataset
 %  1. load the dataset
-load("mmf_Traingsdata.mat");
+load("mmf_Traingsdata_3modes.mat");
 %  2. define the input and output size for neural network
 Nmodes = 3;
 ImageSize = 32;
